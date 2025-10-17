@@ -8,16 +8,22 @@ async function bootstrap() {
   app.use(json({ limit: '300mb' }));
   app.use(urlencoded({ extended: true, limit: '300mb' }));
 
-  // ✅ Active CORS pour ton frontend Next.js
+  // ✅ Active CORS (local + déploiement)
   app.enableCors({
-  origin: [
-    'http://localhost:3000',
-    'http://192.168.100.9:3000',
-  ],
-  credentials: true,
-});
+    origin: [
+      'http://localhost:3000',
+      'http://192.168.100.9:3000',
+      'https://gofight.vercel.app', // 🔹 ton frontend en ligne
+    ],
+    credentials: true,
+  });
 
-  await app.listen(5000);
-  console.log('✅ Backend NestJS sur http://localhost:5000');
+  // ✅ Port dynamique (important pour Railway)
+  const port = process.env.PORT || 5000;
+
+  // ✅ Bind sur toutes les interfaces (sinon Railway ne peut pas accéder au serveur)
+  await app.listen(port, '0.0.0.0');
+
+  console.log(`🚀 Backend GoFight démarré sur le port ${port}`);
 }
 bootstrap();
