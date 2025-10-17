@@ -1,12 +1,18 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/athletes"; // 🔗 ton backend NestJS
+// ✅ Définir l’URL principale (prod ou dev)
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-// ⚙️ Récupérer tous les athlètes (option : filtrer par spécialité)
+const API_URL = `${BASE_URL}/athletes`;
+
+// ⚙️ Récupérer tous les athlètes
 export const fetchAthletes = async (specialite = "") => {
   try {
     const url = specialite ? `${API_URL}?specialite=${specialite}` : API_URL;
-    const res = await axios.get(url);
+    const res = await axios.get(url, {
+      headers: { "Content-Type": "application/json" },
+    });
     return res.data;
   } catch (error) {
     console.error("❌ Erreur fetchAthletes:", error);
@@ -17,7 +23,9 @@ export const fetchAthletes = async (specialite = "") => {
 // ➕ Ajouter un athlète
 export const createAthlete = async (athleteData) => {
   try {
-    const res = await axios.post(API_URL, athleteData);
+    const res = await axios.post(API_URL, athleteData, {
+      headers: { "Content-Type": "application/json" },
+    });
     return res.data;
   } catch (error) {
     console.error("❌ Erreur createAthlete:", error);
@@ -28,7 +36,9 @@ export const createAthlete = async (athleteData) => {
 // ✏️ Modifier un athlète
 export const updateAthlete = async (id, updatedData) => {
   try {
-    const res = await axios.put(`${API_URL}/${id}`, updatedData);
+    const res = await axios.put(`${API_URL}/${id}`, updatedData, {
+      headers: { "Content-Type": "application/json" },
+    });
     return res.data;
   } catch (error) {
     console.error("❌ Erreur updateAthlete:", error);
