@@ -46,9 +46,9 @@ export function Sidebar({ collapsed, setCollapsed }) {
       <nav className="flex flex-col gap-2 text-base font-medium px-3">
         {[
           { icon: Activity, label: 'Dashboard', route: '/dashboard' },
-          { icon: Shield, label: 'KickBoxing', route: '/dashboard/kickboxing' },
-          { icon: Dumbbell, label: 'Boxing Anglaise', route: '/dashboard/boxing' },
-          { icon: Flame, label: 'Crossfit', route: '/dashboard/crossfit' },
+          { icon: Shield, label: 'KickBoxing', route: '/kickboxing' },
+          { icon: Dumbbell, label: 'Boxing Anglaise', route: '/boxing-anglaise' },
+          { icon: Flame, label: 'Crossfit', route: '/crossfit' },
           
         ].map((item) => (
           <button

@@ -14,10 +14,10 @@ export class AuthService {
 
   // Pour initialiser le premier admin manuellement
   async seedAdmin() {
-    const exists = await this.adminModel.findOne({ username: 'Ziyed' });
+    const exists = await this.adminModel.findOne({ username: 'Boyka' });
     if (!exists) {
       const hash = await bcrypt.hash('Shankes', 10);
-      await this.adminModel.create({ username: 'Ziyed', password: hash });
+      await this.adminModel.create({ username: 'Boyka', password: hash });
       console.log('✅ Admin créé avec succès');
     }
   }
