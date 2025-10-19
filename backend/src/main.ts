@@ -13,7 +13,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'http://192.168.100.9:3000',
-      'https://gofight.vercel.app', // 🔹 ton frontend en ligne
+      'https://go-fight.vercel.app', // 🔹 ton frontend en ligne
     ],
     credentials: true,
   });
