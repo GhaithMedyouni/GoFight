@@ -24,10 +24,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Ensure proper scaling on mobile devices */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
       >
-        {children}
+        <div className="min-h-screen flex flex-col px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32">
+          {children}
+        </div>
       </body>
     </html>
   );

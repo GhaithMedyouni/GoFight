@@ -24,4 +24,8 @@ export class AthletesController {
   remove(@Param('id') id: string) {
     return this.athletesService.remove(id);
   }
+  @Get(':id')
+findOne(@Param('id') id: string) {
+  return this.athletesService.findOne(id);
+}
 }

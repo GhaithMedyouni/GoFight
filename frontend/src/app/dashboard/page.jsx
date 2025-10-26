@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react'
 import { fetchAthletes } from '../../services/athletesService'
 import AddUserForm from './AddUserForm'
 import UpdateUserForm from './UpdateUserForm'
+import FormulaireFicheTechnique from './FormulaireFicheTechnique'
 import TableUsers from './TableUsers'
 
 export default function DashboardPage() {
   const [athletes, setAthletes] = useState([])
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null)
+  const [editingFiche, setEditingFiche] = useState(null)
 
   const load = async () => {
     const data = await fetchAthletes()
@@ -68,18 +70,34 @@ export default function DashboardPage() {
       </div>
 
       {/* ---- TABLEAU ---- */}
-      <TableUsers data={filtered} onDeleted={load} onEdit={setEditing} />
+      <TableUsers 
+        data={filtered} 
+        onDeleted={load} 
+        onEdit={setEditing}
+        onEditFiche={setEditingFiche}
+      />
 
-      {/* ---- FORMULAIRE AJOUT / UPDATE ---- */}
+      {/* ---- FORMULAIRE AJOUT ---- */}
       {editing === 'add' && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <AddUserForm onAdded={() => { load(); setEditing(null); }} />
         </div>
       )}
 
+      {/* ---- FORMULAIRE UPDATE INFO DE BASE ---- */}
       {editing && editing !== 'add' && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <UpdateUserForm user={editing} onUpdated={() => { load(); setEditing(null); }} />
+        </div>
+      )}
+
+      {/* ---- FORMULAIRE FICHE TECHNIQUE ---- */}
+      {editingFiche && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 overflow-y-auto">
+          <FormulaireFicheTechnique 
+            athlete={editingFiche} 
+            onSaved={() => { load(); setEditingFiche(null); }} 
+          />
         </div>
       )}
     </div>

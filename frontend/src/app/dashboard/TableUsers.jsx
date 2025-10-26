@@ -1,29 +1,36 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { deleteAthlete } from '../../services/athletesService';
+import { generateFicheTechniquePDF } from './generateFicheTechniquePDF ';
+import { FileText, Download } from 'lucide-react';
 
-export default function TableUsers({ data, onDeleted, onEdit }) {
-  // 🔹 Pagination : 10 utilisateurs par page
+export default function TableUsers({ data, onDeleted, onEdit, onEditFiche }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // 🔹 Calcule la portion de données à afficher
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     return data.slice(start, end);
   }, [data, currentPage]);
 
-  // 🔹 Nombre total de pages
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
-  // 🔹 Fonctions de navigation
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   const prevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleGeneratePDF = (athlete) => {
+    try {
+      generateFicheTechniquePDF(athlete);
+    } catch (error) {
+      console.error('Erreur génération PDF:', error);
+      alert('Erreur lors de la génération du PDF. Assurez-vous que toutes les données sont complètes.');
+    }
   };
 
   return (
@@ -65,22 +72,45 @@ export default function TableUsers({ data, onDeleted, onEdit }) {
                 <td className="p-3">{u.specialite}</td>
 
                 <td className="p-3 text-center">
-                  <button
-                    onClick={() => onEdit(u)}
-                    className="text-yellow-400 hover:text-yellow-200 font-semibold mr-3"
-                    title="Modifier"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() =>
-                      deleteAthlete(u._id).then(onDeleted).catch(console.error)
-                    }
-                    className="text-red-500 hover:text-red-300 font-semibold"
-                    title="Supprimer"
-                  >
-                    🗑️
-                  </button>
+                  <div className="flex justify-center gap-2">
+                    {/* Bouton Modifier info de base */}
+                    <button
+                      onClick={() => onEdit(u)}
+                      className="text-yellow-400 hover:text-yellow-200 font-semibold"
+                      title="Modifier info de base"
+                    >
+                      ✏️
+                    </button>
+
+                    {/* Bouton Fiche Technique */}
+                    <button
+                      onClick={() => onEditFiche(u)}
+                      className="text-blue-400 hover:text-blue-300"
+                      title="Compléter fiche technique"
+                    >
+                      <FileText size={18} />
+                    </button>
+
+                    {/* Bouton Générer PDF */}
+                    <button
+                      onClick={() => handleGeneratePDF(u)}
+                      className="text-green-400 hover:text-green-300"
+                      title="Générer PDF"
+                    >
+                      <Download size={18} />
+                    </button>
+
+                    {/* Bouton Supprimer */}
+                    <button
+                      onClick={() =>
+                        deleteAthlete(u._id).then(onDeleted).catch(console.error)
+                      }
+                      className="text-red-500 hover:text-red-300 font-semibold"
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -96,7 +126,7 @@ export default function TableUsers({ data, onDeleted, onEdit }) {
         </table>
       </div>
 
-      {/* 🔹 Pagination Controls */}
+      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-4">
           <button
