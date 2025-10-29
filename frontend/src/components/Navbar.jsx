@@ -8,10 +8,10 @@ export function Navbar() {
   // 🎯 Déterminer le titre selon l'URL
   const getTitle = () => {
     if (pathname === '/dashboard') return 'Dashboard'
-    if (pathname === '/dashboard/kickboxing') return 'KickBoxing'
-    if (pathname === '/dashboard/boxing') return 'Boxing Anglaise'
-    if (pathname === '/dashboard/crossfit') return 'Crossfit'
-    if (pathname === '/dashboard/athletes') return 'Athlètes'
+    if (pathname === '/kickboxing') return 'KickBoxing'
+    if (pathname === '/boxing-anglaise') return 'Boxing Anglaise'
+    if (pathname === '/crossfit') return 'Crossfit'
+    
     return 'GoFight'
   }
 
@@ -22,7 +22,7 @@ export function Navbar() {
 
       {/* Section droite : admin connecté */}
       <div className="flex items-center gap-4">
-        <span className="font-semibold text-white">Boyka</span>
+        <span className="font-semibold text-white">Grioui Yassine</span>
         <div className="relative w-15 h-15">
           <Image
             src="/Boyka1.png"

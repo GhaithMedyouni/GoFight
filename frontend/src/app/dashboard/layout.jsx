@@ -6,19 +6,25 @@ import { Navbar } from '../../components/Navbar'
 export default function DashboardLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false)
 
-  return (
-    <div className="flex min-h-screen bg-[#0B0B0B] text-white transition-all duration-300">
-      {/* Sidebar */}
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+  const sidebarWidth = collapsed ? 80 : 260 // Largeur sidebar en px
 
-      {/* Contenu principal */}
+  return (
+    <div className="min-h-screen flex bg-[#0B0B0B] text-white overflow-hidden">
+      {/* === SIDEBAR FIXE === */}
+      <aside
+        className="fixed top-0 left-0 h-full bg-[#0B0B0B] border-r border-yellow-500/20 transition-all duration-300"
+        style={{ width: `${sidebarWidth}px` }}
+      >
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      </aside>
+
+      {/* === CONTENU PRINCIPAL === */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          collapsed ? 'ml-20' : 'ml-64'
-        }`}
+        className="flex flex-col flex-1 transition-all duration-300"
+        style={{ marginLeft: `${sidebarWidth}px`, backgroundColor: '#0B0B0B' }}
       >
         <Navbar />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 bg-[#0B0B0B]">{children}</main>
       </div>
     </div>
   )

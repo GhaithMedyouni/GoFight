@@ -6,7 +6,7 @@ export const generateFicheTechniquePDF = (athlete) => {
   let yPos = 20;
 
   // Calcul de l'âge
-  const age = athlete.dateNaissance 
+  const age = athlete.dateNaissance
     ? Math.floor((new Date() - new Date(athlete.dateNaissance)) / 31557600000)
     : 0;
 
@@ -20,6 +20,8 @@ export const generateFicheTechniquePDF = (athlete) => {
     return 'Senior';
   };
 
+
+  const categorieAge = getCategorieAge(age);
   const isBoxing = athlete.specialite === 'Boxing Anglaise' || athlete.specialite === 'KickBoxing';
   const isCrossfit = athlete.specialite === 'Crossfit';
 
@@ -51,17 +53,19 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   pdf.setFontSize(10);
   pdf.setTextColor(0, 0, 0);
-  
+
   const infoGen = athlete.infoGenerale || {};
+  const isKidsCategory = ['Pre-poussin', 'Poussin', 'École', 'Minimes', 'Cadet'].includes(categorieAge);
+  const specialiteAffichee = isKidsCategory ? `${athlete.specialite} (Kids)` : athlete.specialite;
   const infoData = [
     ['Nom', athlete.nom],
     ['Prénom', athlete.prenom],
     ['Âge', `${age} ans`],
     ['Catégorie d\'âge', getCategorieAge(age)],
     ['Poids', infoGen.poids ? `${infoGen.poids} kg` : '-'],
-    ['Taille', infoGen.taille ? `${infoGen.taille} cm` : '-'],
+    ['Taille', infoGen.taille ? `${infoGen.taille} m` : '-'],
     ['Niveau scolaire', infoGen.niveauScolaire || '-'],
-    ['Spécialité', athlete.specialite],
+    ['Spécialité', specialiteAffichee],
   ];
 
   if (isBoxing) {
@@ -83,28 +87,98 @@ export const generateFicheTechniquePDF = (athlete) => {
   yPos = pdf.lastAutoTable.finalY + 10;
 
   // === SECTION 2: NIVEAU SPORTIF ===
-  pdf.setFontSize(14);
-  pdf.setTextColor(255, 214, 10);
-  pdf.text('2. NIVEAU SPORTIF', 15, yPos);
-  yPos += 8;
+  if (isBoxing) {
+    pdf.setFontSize(14);
+    pdf.setTextColor(255, 214, 10);
+    pdf.text('2. NIVEAU SPORTIF', 15, yPos);
+    yPos += 8;
 
-  const niveauSportif = athlete.niveauSportif || {};
-  const niveauData = [
-    ['Grade', niveauSportif.gradeCeinture || '-'],
-    ['Couleur ceinture', niveauSportif.couleurCeinture || '-'],
-    ['Années de pratique', niveauSportif.anneesPratique || '-'],
-    ['Nombre de combats', niveauSportif.nombreCombats || '-']
-  ];
+    const niveauSportif = athlete.niveauSportif || {};
 
-  pdf.autoTable({
-    startY: yPos,
-    body: niveauData,
-    theme: 'grid',
-    styles: { fontSize: 9, textColor: [0, 0, 0], fillColor: [255, 255, 255] },
-    alternateRowStyles: { fillColor: [250, 250, 250] }
-  });
+    // === Tableau classique (Grade, Couleur ceinture, Années de pratique)
+    const niveauData = [
+      ['Grade', niveauSportif.gradeCeinture || '-'],
+      ['Couleur ceinture', niveauSportif.couleurCeinture || '-'],
+      ['Années de pratique', niveauSportif.anneesPratique || '-'],
+    ];
 
-  yPos = pdf.lastAutoTable.finalY + 10;
+    pdf.autoTable({
+      startY: yPos,
+      body: niveauData,
+      theme: 'grid',
+      styles: { fontSize: 9, textColor: [0, 0, 0], fillColor: [255, 255, 255] },
+      head: [['Informations', 'Valeurs']],
+      headStyles: { fillColor: [255, 214, 10], textColor: [0, 0, 0] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      margin: { left: 15 },
+    });
+
+    yPos = pdf.lastAutoTable.finalY + 12;
+
+    // === Statistiques de combat en 3 cartes alignées ===
+    const total = niveauSportif.totalCombats || 0;
+    const victoires = niveauSportif.victoires || 0;
+    const defaites = niveauSportif.defaites || 0;
+    const winRate = total > 0 ? ((victoires / total) * 100).toFixed(2) : '0.00';
+
+    const cardWidth = 35;
+    const cardHeight = 25;
+    const startX = 15;
+    const gap = 20;
+
+    const cards = [
+      { title: 'TOTAL COMBATS', value: total },
+      { title: 'VICTOIRES', value: victoires },
+      { title: 'DÉFAITES', value: defaites },
+    ];
+
+    pdf.setFontSize(12);
+    pdf.setTextColor(0, 0, 0);
+
+    cards.forEach((card, index) => {
+      const x = startX + index * (cardWidth + gap);
+      const y = yPos;
+      // cadre
+      pdf.setDrawColor(0);
+      pdf.setLineWidth(0.5);
+      pdf.rect(x, y, cardWidth, cardHeight);
+      // titre
+      pdf.setFontSize(8);
+      pdf.setTextColor(80);
+      pdf.text(card.title, x + 4, y + 8);
+      // valeur centrée
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(String(card.value), x + cardWidth / 2 - 3, y + 20);
+    });
+
+    yPos += cardHeight + 15;
+
+    // === Titre WIN RATE ===
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('WIN RATE', 15, yPos);
+
+    // === Barre de progression du Win Rate ===
+    const barX = 15;
+    const barY = yPos + 4;
+    const barWidth = 160;
+    const barHeight = 8;
+
+    pdf.setDrawColor(0);
+    pdf.rect(barX, barY, barWidth, barHeight);
+    pdf.setFillColor(0, 0, 0);
+    pdf.rect(barX, barY, (barWidth * winRate) / 100, barHeight, 'F');
+
+    // === Pourcentage affiché à droite ===
+    pdf.setFontSize(9);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`${winRate}%`, barX + barWidth + 5, barY + 6);
+
+    yPos += 20;
+  }
+
+
 
   // === SECTION 3: PROFILE PHYSIQUE ===
   if (yPos > 250) {
@@ -119,6 +193,8 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   const profilePhysique = athlete.profilePhysique || {};
   const physiqueData = [
+    ['Evaluation', profilePhysique.evaluation || '-'],
+    ['Qualité', profilePhysique.qualité || '-'],
     ['Force explosive', profilePhysique.forceExplosive || '-'],
     ['Vitesse', profilePhysique.vitesse || '-'],
     ['Endurance', profilePhysique.endurance || '-'],
@@ -153,6 +229,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   if (isBoxing) {
     techniqueData = [
+      ['Evaluation', profileTechnique.evaluation || '-'],
       ['Compétence', profileTechnique.competence || '-'],
       ['Position de garde', profileTechnique.positionGarde || '-'],
       ['Déplacement', profileTechnique.deplacement || '-'],
@@ -172,15 +249,15 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   if (isCrossfit) {
     techniqueData = [
-      ['Max Pull-ups', profileTechnique.maxPullUps || '-'],
-      ['Max Push-ups', profileTechnique.maxPushUp || '-'],
-      ['Max Abdos', profileTechnique.maxAbdo || '-'],
-      ['Max Burpees', profileTechnique.maxBurpees || '-'],
-      ['Max Gainage', profileTechnique.maxGainage || '-'],
-      ['Max Squat (min)', profileTechnique.maxSquadMn || '-'],
-      ['Max Press', profileTechnique.maxPress || '-'],
-      ['Max Deadlift', profileTechnique.maxDeadlift || '-'],
-      ['Max Squat (kg)', profileTechnique.maxSquadKg || '-']
+      ['Max Pull-ups', profileTechnique.maxPullUps ? `${profileTechnique.maxPullUps} par min` : '-'],
+      ['Max Push-ups', profileTechnique.maxPushUp ? `${profileTechnique.maxPushUp} par min` : '-'],
+      ['Max Abdos', profileTechnique.maxAbdo ? `${profileTechnique.maxAbdo} par min` : '-'],
+      ['Max Burpees', profileTechnique.maxBurpees ? `${profileTechnique.maxBurpees} par min` : '-'],
+      ['Max Gainage', profileTechnique.maxGainage ? `${profileTechnique.maxGainage} min` : '-'],
+      ['Max Squat (min)', profileTechnique.maxSquadMn ? `${profileTechnique.maxSquadMn} par min` : '-'],
+      ['Max Press', profileTechnique.maxPress ? `${profileTechnique.maxPress} Kg` : '-'],
+      ['Max Deadlift', profileTechnique.maxDeadlift ? `${profileTechnique.maxDeadlift} Kg` : '-'],
+      ['Max Squat (kg)', profileTechnique.maxSquadKg ? `${profileTechnique.maxSquadKg} Kg` : '-']
     ];
   }
 
@@ -210,7 +287,7 @@ export const generateFicheTechniquePDF = (athlete) => {
     ['IMC', biometrique.imc || '-'],
     ['Fréquence cardiaque repos', biometrique.frequenceCardiaqueRepos || '-'],
     ['Fréquence cardiaque max', biometrique.frequenceCardiaqueMax || '-'],
-    ['Taux masse grasse (%)', biometrique.tauxMasseGraisse || '-']
+    ['Taux masse grasse ', biometrique.tauxMasseGraisseCategorie || '-']
   ];
 
   pdf.autoTable({
@@ -236,6 +313,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   const profileMental = athlete.profileMental || {};
   const mentalData = [
+    ['Evaluation', profileMental.evaluation || '-'],
     ['Aspect', profileMental.aspect || '-'],
     ['Motivation', profileMental.motivation || '-'],
     ['Discipline', profileMental.discipline || '-'],
@@ -267,7 +345,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   pdf.setFontSize(10);
   pdf.setTextColor(0, 0, 0);
-  
+
   const objectifs = athlete.objectifs?.objectifsList || [];
   if (objectifs.length > 0) {
     objectifs.forEach((obj) => {
@@ -303,7 +381,7 @@ export const generateFicheTechniquePDF = (athlete) => {
       // Encadré pour chaque observation
       pdf.setDrawColor(34, 197, 94);
       pdf.setLineWidth(0.5);
-      
+
       pdf.setFontSize(9);
       pdf.setTextColor(100, 100, 100);
       pdf.text(`📅 Date: ${obs.date ? new Date(obs.date).toLocaleDateString('fr-FR') : '-'}`, 20, yPos);
@@ -347,7 +425,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
       pdf.setDrawColor(59, 130, 246);
       pdf.setLineWidth(0.5);
-      
+
       pdf.setFontSize(9);
       pdf.setTextColor(100, 100, 100);
       pdf.text(`📅 Date: ${com.date ? new Date(com.date).toLocaleDateString('fr-FR') : '-'}`, 20, yPos);
@@ -384,7 +462,7 @@ export const generateFicheTechniquePDF = (athlete) => {
     let xPos = 15;
     let photoCount = 0;
     let rowCount = 0;
-    
+
     athlete.photosProgression.slice(0, 6).forEach((photo, idx) => {
       try {
         // 3 photos par ligne
@@ -401,14 +479,14 @@ export const generateFicheTechniquePDF = (athlete) => {
           yPos = 20;
           rowCount = 0;
         }
-        
+
         pdf.addImage(photo, 'JPEG', xPos, yPos, 45, 45);
-        
+
         // Numéro de la photo
         pdf.setFontSize(8);
         pdf.setTextColor(100, 100, 100);
         pdf.text(`Photo ${idx + 1}`, xPos + 15, yPos + 50);
-        
+
         xPos += 50;
         photoCount++;
       } catch (e) {

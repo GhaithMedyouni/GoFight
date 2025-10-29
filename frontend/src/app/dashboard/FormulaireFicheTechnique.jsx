@@ -26,10 +26,10 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
     // Photos progression
     photosProgression: athlete.photosProgression || []
   })
-    const [loading, setLoading] = useState(false) // <-- loader state
+  const [loading, setLoading] = useState(false) // <-- loader state
 
 
-  const age = athlete.dateNaissance 
+  const age = athlete.dateNaissance
     ? Math.floor((new Date() - new Date(athlete.dateNaissance)) / 31557600000)
     : 0
 
@@ -55,18 +55,54 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
       'maxPullUps', 'maxPushUp', 'maxAbdo', 'maxBurpees', 'maxGainage',
       'maxSquadMn', 'maxPress', 'maxDeadlift', 'maxSquadKg',
       'imc', 'frequenceCardiaqueRepos', 'frequenceCardiaqueMax', 'tauxMasseGraisse',
-      'aspect', 'motivation', 'discipline', 'concentration', 'espritEquipe', 'gestionFatigueStress'
-    ]
-    
-    const finalValue = numericFields.includes(field) && value !== '' 
-      ? Number(value) 
-      : value
-    
-    setForm(prev => ({
-      ...prev,
-      [section]: { ...prev[section], [field]: finalValue }
-    }))
-  }
+      'aspect', 'motivation', 'discipline', 'concentration', 'espritEquipe', 'gestionFatigueStress', 'Qualité', 'Evaluation'
+    ];
+
+    let finalValue = numericFields.includes(field) && value !== ''
+      ? Number(value)
+      : value;
+
+    setForm(prev => {
+      let newForm = { ...prev, [section]: { ...prev[section], [field]: finalValue } };
+
+      // ✅ Recalculer IMC si poids ou taille changent
+      const poids = section === 'infoGenerale' && field === 'poids'
+        ? finalValue
+        : newForm.infoGenerale.poids;
+      const taille = section === 'infoGenerale' && field === 'taille'
+        ? finalValue
+        : newForm.infoGenerale.taille;
+
+      if (poids && taille && taille > 0) {
+        const imc = +(poids / (taille * taille)).toFixed(2);
+        newForm.donneesBiometriques = { ...newForm.donneesBiometriques, imc };
+
+        // ✅ Déterminer la catégorie selon l’IMC
+        let categorie = '';
+        if (imc < 18.5) categorie = 'Minceur';
+        else if (imc < 25) categorie = 'Poids parfait';
+        else if (imc < 30) categorie = 'Prise de poids';
+        else if (imc < 35) categorie = 'Obésité classe 1';
+        else if (imc < 40) categorie = 'Obésité classe 2';
+        else categorie = 'Obésité excessive';
+
+        newForm.donneesBiometriques.tauxMasseGraisseCategorie = categorie;
+      }
+
+      // 🔁 Calcul automatique du Win Rate
+      if (section === 'niveauSportif') {
+        const { totalCombats, victoires } = newForm.niveauSportif;
+        if (totalCombats && victoires >= 0) {
+          const winRate = totalCombats > 0 ? ((victoires / totalCombats) * 100).toFixed(2) : 0;
+          newForm.niveauSportif.winRate = Number(winRate);
+        }
+      }
+
+
+      return newForm;
+    });
+  };
+
 
   // Gestion des observations entraîneur
   const addObservationEntraineur = () => {
@@ -155,9 +191,9 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
       commentairesParents: form.commentairesParents,
       photosProgression: form.photosProgression
     }
-    
+
     console.log('📤 Données à envoyer:', updatedData)
-    
+
     try {
       const result = await updateAthlete(athlete._id, updatedData)
       console.log('✅ Réponse du serveur:', result)
@@ -194,38 +230,38 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
             </div>
             <div>
               <label className="block text-sm mb-1">Poids (kg)</label>
-              <input 
-                type="number" 
-                value={form.infoGenerale.poids || ''} 
+              <input
+                type="number"
+                value={form.infoGenerale.poids || ''}
                 onChange={(e) => handleChange('infoGenerale', 'poids', e.target.value)}
                 className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
               />
             </div>
             <div>
-              <label className="block text-sm mb-1">Taille (cm)</label>
-              <input 
-                type="number" 
-                value={form.infoGenerale.taille || ''} 
+              <label className="block text-sm mb-1">Taille (m)</label>
+              <input
+                type="number"
+                value={form.infoGenerale.taille || ''}
                 onChange={(e) => handleChange('infoGenerale', 'taille', e.target.value)}
                 className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
               />
             </div>
             <div>
               <label className="block text-sm mb-1">Niveau scolaire</label>
-              <input 
-                type="text" 
-                value={form.infoGenerale.niveauScolaire || ''} 
+              <input
+                type="text"
+                value={form.infoGenerale.niveauScolaire || ''}
                 onChange={(e) => handleChange('infoGenerale', 'niveauScolaire', e.target.value)}
                 className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
               />
             </div>
-            
+
             {isBoxing && (
               <>
                 <div>
                   <label className="block text-sm mb-1">Main dominante</label>
-                  <select 
-                    value={form.infoGenerale.mainDominante || ''} 
+                  <select
+                    value={form.infoGenerale.mainDominante || ''}
                     onChange={(e) => handleChange('infoGenerale', 'mainDominante', e.target.value)}
                     className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
                   >
@@ -236,9 +272,9 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                 </div>
                 <div>
                   <label className="block text-sm mb-1">Catégorie de poids</label>
-                  <input 
-                    type="text" 
-                    value={form.infoGenerale.categoriePoids || ''} 
+                  <input
+                    type="text"
+                    value={form.infoGenerale.categoriePoids || ''}
                     onChange={(e) => handleChange('infoGenerale', 'categoriePoids', e.target.value)}
                     className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
                   />
@@ -249,60 +285,139 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
         </div>
 
         {/* SECTION 2: Niveau Sportif */}
-        <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold text-yellow-400 mb-4">2. Niveau Sportif</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm mb-1">Grade</label>
-              <input 
-                type="text" 
-                value={form.niveauSportif.gradeCeinture || ''} 
-                onChange={(e) => handleChange('niveauSportif', 'gradeCeinture', e.target.value)}
-                className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-              />
+        {isBoxing && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
+            <h3 className="text-xl font-semibold text-yellow-400 mb-4">2. Niveau Sportif</h3>
+
+            {/* === Infos générales du niveau === */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm mb-1">Grade</label>
+                <input
+                  type="text"
+                  value={form.niveauSportif.gradeCeinture || ''}
+                  onChange={(e) => handleChange('niveauSportif', 'gradeCeinture', e.target.value)}
+                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Couleur de ceinture</label>
+                <input
+                  type="text"
+                  value={form.niveauSportif.couleurCeinture || ''}
+                  onChange={(e) => handleChange('niveauSportif', 'couleurCeinture', e.target.value)}
+                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Années de pratique</label>
+                <input
+                  type="number"
+                  value={form.niveauSportif.anneesPratique || ''}
+                  onChange={(e) => handleChange('niveauSportif', 'anneesPratique', e.target.value)}
+                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm mb-1">Couleur de ceinture</label>
-              <input 
-                type="text" 
-                value={form.niveauSportif.couleurCeinture || ''} 
-                onChange={(e) => handleChange('niveauSportif', 'couleurCeinture', e.target.value)}
-                className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-              />
+
+            {/* === Statistiques de Combat === */}
+            <h4 className="text-lg font-semibold text-yellow-300 mb-2">⚔️ Statistiques de Combat</h4>
+            <div className="grid grid-cols-4 gap-4">
+              {/* TOTAL COMBATS */}
+              <div>
+                <label className="block text-sm mb-1">Total Combats</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.niveauSportif.totalCombats || ''}
+                  onChange={(e) => handleChange('niveauSportif', 'totalCombats', e.target.value)}
+                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              {/* VICTOIRES */}
+              <div>
+                <label className="block text-sm mb-1">Victoires</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.niveauSportif.victoires || ''}
+                  onChange={(e) => handleChange('niveauSportif', 'victoires', e.target.value)}
+                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              {/* DÉFAITES */}
+              <div>
+                <label className="block text-sm mb-1">Défaites</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.niveauSportif.defaites || ''}
+                  onChange={(e) => handleChange('niveauSportif', 'defaites', e.target.value)}
+                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              {/* WIN RATE */}
+              <div>
+                <label className="block text-sm mb-1">Taux de victoire (%)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  disabled
+                  value={
+                    form.niveauSportif.totalCombats > 0
+                      ? ((form.niveauSportif.victoires / form.niveauSportif.totalCombats) * 100).toFixed(2)
+                      : 0
+                  }
+                  className="w-full bg-gray-700 text-gray-300 p-2 rounded cursor-not-allowed"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm mb-1">Années de pratique</label>
-              <input 
-                type="number" 
-                value={form.niveauSportif.anneesPratique || ''} 
-                onChange={(e) => handleChange('niveauSportif', 'anneesPratique', e.target.value)}
-                className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Nombre de combats</label>
-              <input 
-                type="number" 
-                value={form.niveauSportif.nombreCombats || ''} 
-                onChange={(e) => handleChange('niveauSportif', 'nombreCombats', e.target.value)}
-                className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-              />
-            </div>
+
+            {/* === Barre de progression du taux de victoire === */}
+            {form.niveauSportif.totalCombats > 0 && (
+              <div className="mt-4">
+                <div className="h-3 w-full bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-3 bg-yellow-400 transition-all duration-500"
+                    style={{
+                      width: `${Math.min(
+                        (form.niveauSportif.victoires / form.niveauSportif.totalCombats) * 100,
+                        100
+                      )}%`,
+                    }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-300 mt-1 text-right">
+                  {(
+                    (form.niveauSportif.victoires / form.niveauSportif.totalCombats) *
+                    100
+                  ).toFixed(2)}% de victoires
+                </p>
+              </div>
+            )}
           </div>
-        </div>
+        )}
+
 
         {/* SECTION 3: Profile Physique */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
           <h3 className="text-xl font-semibold text-yellow-400 mb-4">3. Profile Physique (1-10)</h3>
           <div className="grid grid-cols-3 gap-4">
-            {['forceExplosive', 'vitesse', 'endurance', 'puissanceFrappe', 'coordination', 'souplesse'].map(field => (
+            {['evaluation', 'qualité', 'forceExplosive', 'vitesse', 'endurance', 'puissanceFrappe', 'coordination', 'souplesse'].map(field => (
               <div key={field}>
                 <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   max="10"
-                  value={form.profilePhysique[field] || ''} 
+                  step="0.01"
+                  value={form.profilePhysique[field] || ''}
                   onChange={(e) => handleChange('profilePhysique', field, e.target.value)}
                   className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
                 />
@@ -314,20 +429,21 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
         {/* SECTION 4: Profile Technique */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
           <h3 className="text-xl font-semibold text-yellow-400 mb-4">4. Profile Technique (1-10)</h3>
-          
+
           {isBoxing && (
             <div className="grid grid-cols-3 gap-4">
-              {['competence', 'positionGarde', 'deplacement', 'jabCross', 'crochet', 'uppercut', 
+              {['evaluation', 'competence', 'positionGarde', 'deplacement', 'jabCross', 'crochet', 'uppercut',
                 'esquiveBlocage', 'enchainement', 'timingDistance', 'riposte',
                 ...(athlete.specialite === 'KickBoxing' ? ['coupDePied'] : [])
               ].map(field => (
                 <div key={field}>
                   <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                  <input 
-                    type="number" 
-                    min="1" 
+                  <input
+                    type="number"
+                    min="1"
                     max="10"
-                    value={form.profileTechnique[field] || ''} 
+                    step="0.01"
+                    value={form.profileTechnique[field] || ''}
                     onChange={(e) => handleChange('profileTechnique', field, e.target.value)}
                     className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
                   />
@@ -338,16 +454,14 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
 
           {isCrossfit && (
             <div className="grid grid-cols-3 gap-4">
-              {['maxPullUps', 'maxPushUp', 'maxAbdo', 'maxBurpees', 'maxGainage', 
+              {['maxPullUps', 'maxPushUp', 'maxAbdo', 'maxBurpees', 'maxGainage',
                 'maxSquadMn', 'maxPress', 'maxDeadlift', 'maxSquadKg'
               ].map(field => (
                 <div key={field}>
                   <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="10"
-                    value={form.profileTechnique[field] || ''} 
+                  <input
+                    type="number"
+                    value={form.profileTechnique[field] || ''}
                     onChange={(e) => handleChange('profileTechnique', field, e.target.value)}
                     className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
                   />
@@ -363,39 +477,38 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm mb-1">IMC</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 step="0.1"
-                value={form.donneesBiometriques.imc || ''} 
-                onChange={(e) => handleChange('donneesBiometriques', 'imc', e.target.value)}
+                value={form.donneesBiometriques.imc || ''}
+                disabled
                 className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
               />
             </div>
             <div>
               <label className="block text-sm mb-1">Fréquence cardiaque au repos</label>
-              <input 
-                type="number" 
-                value={form.donneesBiometriques.frequenceCardiaqueRepos || ''} 
+              <input
+                type="number"
+                value={form.donneesBiometriques.frequenceCardiaqueRepos || ''}
                 onChange={(e) => handleChange('donneesBiometriques', 'frequenceCardiaqueRepos', e.target.value)}
                 className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
               />
             </div>
             <div>
               <label className="block text-sm mb-1">Fréquence cardiaque maximum</label>
-              <input 
-                type="number" 
-                value={form.donneesBiometriques.frequenceCardiaqueMax || ''} 
+              <input
+                type="number"
+                value={form.donneesBiometriques.frequenceCardiaqueMax || ''}
                 onChange={(e) => handleChange('donneesBiometriques', 'frequenceCardiaqueMax', e.target.value)}
                 className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
               />
             </div>
             <div>
-              <label className="block text-sm mb-1">Taux de masse grasse (%)</label>
-              <input 
-                type="number" 
-                step="0.1"
-                value={form.donneesBiometriques.tauxMasseGraisse || ''} 
-                onChange={(e) => handleChange('donneesBiometriques', 'tauxMasseGraisse', e.target.value)}
+              <label className="block text-sm mb-1">Taux de masse grasse </label>
+              <input
+                type="text"
+                value={form.donneesBiometriques.tauxMasseGraisseCategorie || ''}
+                disabled
                 className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
               />
             </div>
@@ -406,14 +519,15 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
           <h3 className="text-xl font-semibold text-yellow-400 mb-4">6. Profile Mental (1-10)</h3>
           <div className="grid grid-cols-3 gap-4">
-            {['aspect', 'motivation', 'discipline', 'concentration', 'espritEquipe', 'gestionFatigueStress'].map(field => (
+            {['evaluation', 'aspect', 'motivation', 'discipline', 'concentration', 'espritEquipe', 'gestionFatigueStress'].map(field => (
               <div key={field}>
                 <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   max="10"
-                  value={form.profileMental[field] || ''} 
+                  step="0.01"
+                  value={form.profileMental[field] || ''}
                   onChange={(e) => handleChange('profileMental', field, e.target.value)}
                   className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
                 />
@@ -429,14 +543,14 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
             {isBoxing && (
               <>
                 <label className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-4 h-4"
                     checked={form.objectifs.objectifsList?.includes('Préparation compétition')}
                     onChange={(e) => {
                       const obj = 'Préparation compétition'
                       const list = form.objectifs.objectifsList || []
-                      const newList = e.target.checked 
+                      const newList = e.target.checked
                         ? [...list, obj]
                         : list.filter(o => o !== obj)
                       setForm(prev => ({
@@ -448,14 +562,14 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                   <span>Préparation compétition</span>
                 </label>
                 <label className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-4 h-4"
                     checked={form.objectifs.objectifsList?.includes('Amélioration technique')}
                     onChange={(e) => {
                       const obj = 'Amélioration technique'
                       const list = form.objectifs.objectifsList || []
-                      const newList = e.target.checked 
+                      const newList = e.target.checked
                         ? [...list, obj]
                         : list.filter(o => o !== obj)
                       setForm(prev => ({
@@ -467,14 +581,14 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                   <span>Amélioration technique</span>
                 </label>
                 <label className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-4 h-4"
                     checked={form.objectifs.objectifsList?.includes('Travail de puissance')}
                     onChange={(e) => {
                       const obj = 'Travail de puissance'
                       const list = form.objectifs.objectifsList || []
-                      const newList = e.target.checked 
+                      const newList = e.target.checked
                         ? [...list, obj]
                         : list.filter(o => o !== obj)
                       setForm(prev => ({
@@ -486,14 +600,14 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                   <span>Travail de puissance</span>
                 </label>
                 <label className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-4 h-4"
                     checked={form.objectifs.objectifsList?.includes('Perte de poids')}
                     onChange={(e) => {
                       const obj = 'Perte de poids'
                       const list = form.objectifs.objectifsList || []
-                      const newList = e.target.checked 
+                      const newList = e.target.checked
                         ? [...list, obj]
                         : list.filter(o => o !== obj)
                       setForm(prev => ({
@@ -509,14 +623,14 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
             {isCrossfit && (
               <>
                 <label className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-4 h-4"
                     checked={form.objectifs.objectifsList?.includes('Perte de graisse')}
                     onChange={(e) => {
                       const obj = 'Perte de graisse'
                       const list = form.objectifs.objectifsList || []
-                      const newList = e.target.checked 
+                      const newList = e.target.checked
                         ? [...list, obj]
                         : list.filter(o => o !== obj)
                       setForm(prev => ({
@@ -528,14 +642,14 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                   <span>Perte de graisse</span>
                 </label>
                 <label className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-4 h-4"
                     checked={form.objectifs.objectifsList?.includes('Garde masse musculaire')}
                     onChange={(e) => {
                       const obj = 'Garde masse musculaire'
                       const list = form.objectifs.objectifsList || []
-                      const newList = e.target.checked 
+                      const newList = e.target.checked
                         ? [...list, obj]
                         : list.filter(o => o !== obj)
                       setForm(prev => ({
@@ -668,10 +782,10 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
         {/* Photos Progression */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
           <h3 className="text-xl font-semibold text-yellow-400 mb-4">📸 Photos Avant/Après (Max 6)</h3>
-          <input 
-            type="file" 
-            multiple 
-            accept="image/*" 
+          <input
+            type="file"
+            multiple
+            accept="image/*"
             onChange={handlePhotoUpload}
             className="mb-4 text-gray-300"
           />
@@ -697,19 +811,19 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
         </div>
 
         <div className="flex gap-4">
-       
-           <button
-          type="submit"
-          disabled={loading}
-          className={`flex-1 ${loading ? 'bg-yellow-300 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500'} text-black font-bold py-3 rounded-lg flex justify-center items-center`}
-        >
-          {loading ? (
-            <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 10-8 8z"></path>
-            </svg>
-          ) : '💾 Enregistrer'}
-        </button>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`flex-1 ${loading ? 'bg-yellow-300 cursor-not-allowed' : 'bg-yellow-400 hover:bg-yellow-500'} text-black font-bold py-3 rounded-lg flex justify-center items-center`}
+          >
+            {loading ? (
+              <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 10-8 8z"></path>
+              </svg>
+            ) : '💾 Enregistrer'}
+          </button>
           <button
             type="button"
             onClick={onSaved}
