@@ -1,31 +1,34 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Sidebar } from '../../components/Sidebar'
-import { Navbar } from '../../components/Navbar'
+import { useState } from 'react';
+import { Sidebar } from '../../components/Sidebar';
+import { Navbar } from '../../components/Navbar';
 
 export default function DashboardLayout({ children }) {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(false);
+
+  const sidebarWidth = collapsed ? 80 : 260; // Sidebar width (responsive toggle)
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] text-white flex transition-all duration-300">
-      {/* === Sidebar === */}
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-
-      {/* === Main Content === */}
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          collapsed ? 'md:ml-20' : 'md:ml-64'
-        }`}
+    <div className="min-h-screen flex bg-[#0B0B0B] text-white overflow-hidden">
+      {/* Sidebar */}
+      <aside
+        className="fixed top-0 left-0 h-full border-r border-yellow-500/20 transition-all duration-300 bg-[#0B0B0B]"
+        style={{ width: `${sidebarWidth}px` }}
       >
-        {/* Navbar (fixée en haut) */}
-        <Navbar />
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      </aside>
 
-        {/* Contenu principal */}
-        <main className="min-h-screen pt-16">
-          <div className="p-4 md:p-6">{children}</div>
+      {/* Main content area */}
+      <div
+        className="flex flex-col flex-1 transition-all duration-300"
+        style={{ marginLeft: `${sidebarWidth}px` }}
+      >
+        <Navbar />
+        <main className="flex-1 p-4 sm:p-6 md:p-8 bg-[#0B0B0B] overflow-y-auto">
+          {children}
         </main>
       </div>
     </div>
-  )
+  );
 }
