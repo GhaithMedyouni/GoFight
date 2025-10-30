@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { updateAthlete } from '../../services/athletesService'
-import { XCircle, Plus, Trash2 } from 'lucide-react'
+import { XCircle, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function FormulaireFicheTechnique({ athlete, onSaved }) {
   const [form, setForm] = useState({
@@ -27,7 +27,9 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
     photosProgression: athlete.photosProgression || []
   })
   const [loading, setLoading] = useState(false) // <-- loader state
-
+  const [saveMessage, setSaveMessage] = useState('') // Message de confirmation
+  const [isObservationsOpen, setIsObservationsOpen] = useState(false)
+  const [isCommentairesOpen, setIsCommentairesOpen] = useState(false)
 
   const age = athlete.dateNaissance
     ? Math.floor((new Date() - new Date(athlete.dateNaissance)) / 31557600000)
@@ -114,6 +116,7 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
       ...prev,
       observationsEntraineur: [...prev.observationsEntraineur, newObs]
     }))
+    setIsObservationsOpen(true) // ✅ Ouvrir automatiquement après ajout
   }
 
   const updateObservationEntraineur = (index, field, value) => {
@@ -141,8 +144,8 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
       ...prev,
       commentairesParents: [...prev.commentairesParents, newCom]
     }))
+    setIsCommentairesOpen(true) // ✅ Ouvrir automatiquement après ajout
   }
-
   const updateCommentaireParent = (index, field, value) => {
     setForm(prev => {
       const newCom = [...prev.commentairesParents]
@@ -179,6 +182,8 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setSaveMessage('')
+
     const updatedData = {
       infoGenerale: form.infoGenerale,
       niveauSportif: form.niveauSportif,
@@ -197,13 +202,76 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
     try {
       const result = await updateAthlete(athlete._id, updatedData)
       console.log('✅ Réponse du serveur:', result)
-      onSaved()
+
+      // ✅ Recharger les données de l'athlète pour afficher TOUTES les observations
+      setForm({
+        infoGenerale: result.infoGenerale || {},
+        niveauSportif: result.niveauSportif || {},
+        profilePhysique: result.profilePhysique || {},
+        profileTechnique: result.profileTechnique || {},
+        donneesBiometriques: result.donneesBiometriques || {},
+        profileMental: result.profileMental || {},
+        objectifs: result.objectifs || { objectifsList: [] },
+        observationsEntraineur: result.observationsEntraineur || [],
+        commentairesParents: result.commentairesParents || [],
+        photosProgression: result.photosProgression || []
+      })
+
+      setSaveMessage('✅ Fiche technique enregistrée avec succès!')
+      setTimeout(() => setSaveMessage(''), 3000)
+      setLoading(false)
+      onSaved() // Fermer le formulaire
     } catch (error) {
       console.error('❌ Erreur sauvegarde:', error)
-      alert('❌ Erreur lors de la sauvegarde: ' + (error.response?.data?.message || error.message))
+      setSaveMessage('❌ Erreur lors de la sauvegarde: ' + (error.response?.data?.message || error.message))
+      setLoading(false)
     }
   }
 
+  // ✅ NOUVELLE FONCTION : Enregistrer sans fermer
+  const handleSaveWithoutClose = async () => {
+    setLoading(true)
+    setSaveMessage('')
+
+    const updatedData = {
+      infoGenerale: form.infoGenerale,
+      niveauSportif: form.niveauSportif,
+      profilePhysique: form.profilePhysique,
+      profileTechnique: form.profileTechnique,
+      donneesBiometriques: form.donneesBiometriques,
+      profileMental: form.profileMental,
+      objectifs: form.objectifs,
+      observationsEntraineur: form.observationsEntraineur,
+      commentairesParents: form.commentairesParents,
+      photosProgression: form.photosProgression
+    }
+
+    try {
+      const result = await updateAthlete(athlete._id, updatedData)
+
+      // Recharger les données
+      setForm({
+        infoGenerale: result.infoGenerale || {},
+        niveauSportif: result.niveauSportif || {},
+        profilePhysique: result.profilePhysique || {},
+        profileTechnique: result.profileTechnique || {},
+        donneesBiometriques: result.donneesBiometriques || {},
+        profileMental: result.profileMental || {},
+        objectifs: result.objectifs || { objectifsList: [] },
+        observationsEntraineur: result.observationsEntraineur || [],
+        commentairesParents: result.commentairesParents || [],
+        photosProgression: result.photosProgression || []
+      })
+
+      setSaveMessage('✅ Données enregistrées ! Vous pouvez continuer à modifier.')
+      setTimeout(() => setSaveMessage(''), 3000)
+      setLoading(false)
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde:', error)
+      setSaveMessage('❌ Erreur: ' + (error.response?.data?.message || error.message))
+      setLoading(false)
+    }
+  }
   return (
     <div className="bg-[#0B0B0B] text-white p-6 rounded-lg max-w-6xl mx-auto max-h-[90vh] overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
@@ -216,6 +284,15 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Message de confirmation */}
+        {saveMessage && (
+          <div className={`p-4 rounded-lg text-center font-semibold ${saveMessage.includes('✅')
+            ? 'bg-green-500/20 text-green-400 border border-green-500'
+            : 'bg-red-500/20 text-red-400 border border-red-500'
+            }`}>
+            {saveMessage}
+          </div>
+        )}
         {/* SECTION 1: Info Générale */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
           <h3 className="text-xl font-semibold text-yellow-400 mb-4">1. Informations Générales</h3>
@@ -665,82 +742,33 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
           </div>
         </div>
 
-        {/* SECTION 8: Observations Entraîneur */}
+        {/* SECTION 8: Observations Entraîneur - ACCORDÉON */}
         <div className="bg-green-500/10 border border-green-500/30 p-6 rounded-lg">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-green-400">📝 Observations de l'Entraîneur</h3>
+            <button
+              type="button"
+              onClick={() => setIsObservationsOpen(!isObservationsOpen)}
+              className="flex items-center gap-2 text-xl font-semibold text-green-400 hover:text-green-300"
+            >
+              📝 Observations de l'Entraîneur ({form.observationsEntraineur.length})
+              {isObservationsOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+            </button>
             <button
               type="button"
               onClick={addObservationEntraineur}
               className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
             >
               <Plus size={20} />
-              Ajouter une observation
+              Ajouter
             </button>
           </div>
 
-          {form.observationsEntraineur.length === 0 ? (
-            <p className="text-gray-400 text-center py-4">Aucune observation enregistrée</p>
-          ) : (
-            <div className="space-y-4">
-              {form.observationsEntraineur.map((obs, index) => (
-                <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1 grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm mb-1 text-gray-300">Date</label>
-                        <input
-                          type="date"
-                          value={obs.date || ''}
-                          onChange={(e) => updateObservationEntraineur(index, 'date', e.target.value)}
-                          className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-green-400"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => deleteObservationEntraineur(index)}
-                      className="ml-4 text-red-400 hover:text-red-600"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1 text-gray-300">Observation</label>
-                    <textarea
-                      value={obs.commentaire || ''}
-                      onChange={(e) => updateObservationEntraineur(index, 'commentaire', e.target.value)}
-                      rows={4}
-                      placeholder="Saisir votre observation sur l'athlète..."
-                      className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-green-400"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* SECTION 9: Commentaires Parents (si moins de 14 ans) */}
-        {age < 14 && (
-          <div className="bg-blue-500/10 border border-blue-500/30 p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-blue-400">👨‍👩‍👧 Commentaires des Parents</h3>
-              <button
-                type="button"
-                onClick={addCommentaireParent}
-                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-              >
-                <Plus size={20} />
-                Ajouter un commentaire
-              </button>
-            </div>
-
-            {form.commentairesParents.length === 0 ? (
-              <p className="text-gray-400 text-center py-4">Aucun commentaire parental enregistré</p>
-            ) : (
-              <div className="space-y-4">
-                {form.commentairesParents.map((com, index) => (
+          {isObservationsOpen && (
+            <div className="space-y-4 mt-4">
+              {form.observationsEntraineur.length === 0 ? (
+                <p className="text-gray-400 text-center py-4">Aucune observation enregistrée</p>
+              ) : (
+                form.observationsEntraineur.map((obs, index) => (
                   <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1 grid grid-cols-2 gap-4">
@@ -748,37 +776,103 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                           <label className="block text-sm mb-1 text-gray-300">Date</label>
                           <input
                             type="date"
-                            value={com.date || ''}
-                            onChange={(e) => updateCommentaireParent(index, 'date', e.target.value)}
-                            className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-blue-400"
+                            value={obs.date || ''}
+                            onChange={(e) => updateObservationEntraineur(index, 'date', e.target.value)}
+                            className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-green-400"
                           />
                         </div>
                       </div>
                       <button
                         type="button"
-                        onClick={() => deleteCommentaireParent(index)}
+                        onClick={() => deleteObservationEntraineur(index)}
                         className="ml-4 text-red-400 hover:text-red-600"
                       >
                         <Trash2 size={20} />
                       </button>
                     </div>
                     <div>
-                      <label className="block text-sm mb-1 text-gray-300">Comportement observé</label>
+                      <label className="block text-sm mb-1 text-gray-300">Observation</label>
                       <textarea
-                        value={com.comportement || ''}
-                        onChange={(e) => updateCommentaireParent(index, 'comportement', e.target.value)}
+                        value={obs.commentaire || ''}
+                        onChange={(e) => updateObservationEntraineur(index, 'commentaire', e.target.value)}
                         rows={4}
-                        placeholder="Les parents peuvent décrire le comportement de l'enfant à la maison, sa motivation, etc..."
-                        className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-blue-400"
+                        placeholder="Saisir votre observation sur l'athlète..."
+                        className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-green-400"
                       />
                     </div>
                   </div>
-                ))}
+                ))
+              )}
+            </div>
+          )}
+        </div>
+        {/* SECTION 9: Commentaires Parents (si moins de 14 ans) */}
+        {/* SECTION 9: Commentaires Parents - ACCORDÉON */}
+        {age < 14 && (
+          <div className="bg-blue-500/10 border border-blue-500/30 p-6 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                type="button"
+                onClick={() => setIsCommentairesOpen(!isCommentairesOpen)}
+                className="flex items-center gap-2 text-xl font-semibold text-blue-400 hover:text-blue-300"
+              >
+                👨‍👩‍👧 Commentaires des Parents ({form.commentairesParents.length})
+                {isCommentairesOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+              <button
+                type="button"
+                onClick={addCommentaireParent}
+                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+              >
+                <Plus size={20} />
+                Ajouter
+              </button>
+            </div>
+
+            {isCommentairesOpen && (
+              <div className="space-y-4 mt-4">
+                {form.commentairesParents.length === 0 ? (
+                  <p className="text-gray-400 text-center py-4">Aucun commentaire parental enregistré</p>
+                ) : (
+                  form.commentairesParents.map((com, index) => (
+                    <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1 grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm mb-1 text-gray-300">Date</label>
+                            <input
+                              type="date"
+                              value={com.date || ''}
+                              onChange={(e) => updateCommentaireParent(index, 'date', e.target.value)}
+                              className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-blue-400"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => deleteCommentaireParent(index)}
+                          className="ml-4 text-red-400 hover:text-red-600"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1 text-gray-300">Comportement observé</label>
+                        <textarea
+                          value={com.comportement || ''}
+                          onChange={(e) => updateCommentaireParent(index, 'comportement', e.target.value)}
+                          rows={4}
+                          placeholder="Les parents peuvent décrire le comportement de l'enfant à la maison, sa motivation, etc..."
+                          className="w-full bg-gray-700 p-2 rounded focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
         )}
-
         {/* Photos Progression */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
           <h3 className="text-xl font-semibold text-yellow-400 mb-4">📸 Photos Avant/Après (Max 6)</h3>
@@ -811,7 +905,9 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
         </div>
 
         <div className="flex gap-4">
+         
 
+          {/* Bouton: Enregistrer et fermer */}
           <button
             type="submit"
             disabled={loading}
@@ -822,8 +918,10 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 10-8 8z"></path>
               </svg>
-            ) : '💾 Enregistrer'}
+            ) : '💾 Enregistrer et fermer'}
           </button>
+
+          {/* Bouton: Annuler */}
           <button
             type="button"
             onClick={onSaved}

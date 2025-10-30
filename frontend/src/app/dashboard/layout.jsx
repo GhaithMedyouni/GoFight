@@ -1,4 +1,5 @@
 'use client'
+
 import { useState } from 'react'
 import { Sidebar } from '../../components/Sidebar'
 import { Navbar } from '../../components/Navbar'
@@ -6,25 +7,24 @@ import { Navbar } from '../../components/Navbar'
 export default function DashboardLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false)
 
-  const sidebarWidth = collapsed ? 80 : 260 // Largeur sidebar en px
-
   return (
-    <div className="min-h-screen flex bg-[#0B0B0B] text-white overflow-hidden">
-      {/* === SIDEBAR FIXE === */}
-      <aside
-        className="fixed top-0 left-0 h-full bg-[#0B0B0B] border-r border-yellow-500/20 transition-all duration-300"
-        style={{ width: `${sidebarWidth}px` }}
-      >
-        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      </aside>
+    <div className="min-h-screen bg-[#0B0B0B] text-white flex transition-all duration-300">
+      {/* === Sidebar === */}
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
-      {/* === CONTENU PRINCIPAL === */}
+      {/* === Main Content === */}
       <div
-        className="flex flex-col flex-1 transition-all duration-300"
-        style={{ marginLeft: `${sidebarWidth}px`, backgroundColor: '#0B0B0B' }}
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          collapsed ? 'md:ml-20' : 'md:ml-64'
+        }`}
       >
+        {/* Navbar (fixée en haut) */}
         <Navbar />
-        <main className="flex-1 p-6 bg-[#0B0B0B]">{children}</main>
+
+        {/* Contenu principal */}
+        <main className="min-h-screen pt-16">
+          <div className="p-4 md:p-6">{children}</div>
+        </main>
       </div>
     </div>
   )

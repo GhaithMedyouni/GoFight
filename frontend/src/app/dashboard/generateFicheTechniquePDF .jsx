@@ -48,7 +48,7 @@ export const generateFicheTechniquePDF = (athlete) => {
   // === SECTION 1: INFORMATIONS GÉNÉRALES ===
   pdf.setFontSize(14);
   pdf.setTextColor(255, 214, 10);
-  pdf.text('1. INFORMATIONS GÉNÉRALES', 50, yPos);
+  pdf.text('INFORMATIONS GÉNÉRALES', 50, yPos);
   yPos += 8;
 
   pdf.setFontSize(10);
@@ -90,7 +90,7 @@ export const generateFicheTechniquePDF = (athlete) => {
   if (isBoxing) {
     pdf.setFontSize(14);
     pdf.setTextColor(255, 214, 10);
-    pdf.text('2. NIVEAU SPORTIF', 15, yPos);
+    pdf.text('NIVEAU SPORTIF', 15, yPos);
     yPos += 8;
 
     const niveauSportif = athlete.niveauSportif || {};
@@ -188,7 +188,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   pdf.setFontSize(14);
   pdf.setTextColor(255, 214, 10);
-  pdf.text('3. PROFILE PHYSIQUE (1-10)', 15, yPos);
+  pdf.text('PROFILE PHYSIQUE (1-10)', 15, yPos);
   yPos += 8;
 
   const profilePhysique = athlete.profilePhysique || {};
@@ -221,7 +221,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   pdf.setFontSize(14);
   pdf.setTextColor(255, 214, 10);
-  pdf.text('4. PROFILE TECHNIQUE (1-10)', 15, yPos);
+  pdf.text('PROFILE TECHNIQUE (1-10)', 15, yPos);
   yPos += 8;
 
   const profileTechnique = athlete.profileTechnique || {};
@@ -279,7 +279,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   pdf.setFontSize(14);
   pdf.setTextColor(255, 214, 10);
-  pdf.text('5. DONNÉES BIOMÉTRIQUES', 15, yPos);
+  pdf.text('DONNÉES BIOMÉTRIQUES', 15, yPos);
   yPos += 8;
 
   const biometrique = athlete.donneesBiometriques || {};
@@ -308,7 +308,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   pdf.setFontSize(14);
   pdf.setTextColor(255, 214, 10);
-  pdf.text('6. PROFILE MENTAL (1-10)', 15, yPos);
+  pdf.text('ROFILE MENTAL (1-10)', 15, yPos);
   yPos += 8;
 
   const profileMental = athlete.profileMental || {};
@@ -340,7 +340,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
   pdf.setFontSize(14);
   pdf.setTextColor(255, 214, 10);
-  pdf.text('7. OBJECTIFS DE L\'ATHLÈTE', 15, yPos);
+  pdf.text('OBJECTIFS DE L\'ATHLÈTE', 15, yPos);
   yPos += 8;
 
   pdf.setFontSize(10);
@@ -368,7 +368,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
     pdf.setFontSize(14);
     pdf.setTextColor(34, 197, 94); // Couleur verte
-    pdf.text('8. OBSERVATIONS DE L\'ENTRAÎNEUR', 15, yPos);
+    pdf.text('OBSERVATIONS DE L\'ENTRAÎNEUR', 15, yPos);
     yPos += 10;
 
     athlete.observationsEntraineur.forEach((obs, index) => {
@@ -384,7 +384,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
       pdf.setFontSize(9);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(`📅 Date: ${obs.date ? new Date(obs.date).toLocaleDateString('fr-FR') : '-'}`, 20, yPos);
+      pdf.text(`Date: ${obs.date ? new Date(obs.date).toLocaleDateString('fr-FR') : '-'}`, 20, yPos);
       yPos += 6;
 
       pdf.setFontSize(9);
@@ -413,7 +413,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
     pdf.setFontSize(14);
     pdf.setTextColor(59, 130, 246); // Couleur bleue
-    pdf.text('9. COMMENTAIRES DES PARENTS', 15, yPos);
+    pdf.text('COMMENTAIRES DES PARENTS', 15, yPos);
     yPos += 10;
 
     athlete.commentairesParents.forEach((com, index) => {
@@ -428,7 +428,7 @@ export const generateFicheTechniquePDF = (athlete) => {
 
       pdf.setFontSize(9);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(`📅 Date: ${com.date ? new Date(com.date).toLocaleDateString('fr-FR') : '-'}`, 20, yPos);
+      pdf.text(`Date: ${com.date ? new Date(com.date).toLocaleDateString('fr-FR') : '-'}`, 20, yPos);
       yPos += 6;
 
       pdf.setFontSize(9);

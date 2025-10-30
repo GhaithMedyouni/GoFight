@@ -1,11 +1,26 @@
 'use client'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Activity, Dumbbell, Shield, Flame, Menu, X, LogOut } from 'lucide-react'
 import { useRouter, usePathname } from 'next/navigation'
 
-export function Sidebar({ collapsed, setCollapsed, isMobile, onMobileClose }) {
+export function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.sidebar') && !e.target.closest('.menu-button')) {
+        setOpen(false)
+      }
+    }
+    
+    document.addEventListener('click', handleOutsideClick)
+    return () => document.removeEventListener('click', handleOutsideClick)
+  }, [open])
 
   const menuItems = [
     { icon: Activity, label: 'Dashboard', route: '/dashboard' },
@@ -16,118 +31,95 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, onMobileClose }) {
 
   const handleNavigation = (route) => {
     router.push(route)
-    if (isMobile && onMobileClose) {
-      onMobileClose()
-    }
+    setOpen(false)
   }
 
   const handleLogout = () => {
     router.push('/login')
-    if (isMobile && onMobileClose) {
-      onMobileClose()
-    }
+    setOpen(false)
   }
 
   return (
-    <aside
-      className={`
-        fixed left-0 top-0 h-full bg-[#0B0B0B] text-white 
-        flex flex-col justify-between 
-        shadow-[0_0_25px_rgba(255,214,10,0.3)] 
-        border-r border-yellow-500/20 
-        transition-all duration-300 z-50
-        ${isMobile ? 'w-64' : collapsed ? 'w-20' : 'w-64'}
-      `}
-    >
-      {/* === Header === */}
-      <div className="p-4 flex flex-col items-center">
-        {/* Bouton collapse/close */}
-        <button
-          onClick={() => {
-            if (isMobile && onMobileClose) {
-              onMobileClose()
-            } else {
-              setCollapsed(!collapsed)
-            }
-          }}
-          className="self-end text-yellow-400 hover:text-yellow-300 mb-4 transition"
-          title={isMobile ? 'Fermer le menu' : collapsed ? 'Ouvrir le menu' : 'Réduire le menu'}
-        >
-          {isMobile ? <X size={24} /> : collapsed ? <Menu size={24} /> : <X size={24} />}
-        </button>
+    <>
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="menu-button fixed top-4 left-4 z-50 p-2.5 rounded-lg bg-yellow-500 text-black shadow-lg hover:bg-yellow-600 transition-all md:hidden"
+        aria-label="Toggle menu"
+      >
+        {open ? <X size={22} /> : <Menu size={22} />}
+      </button>
 
-        {/* Logo + titre */}
-        {(!collapsed || isMobile) && (
-          <>
-            <Image
-              src="/GoFight.png"
-              alt="GoFight Logo"
-              width={70}
-              height={70}
-              className="mb-3 drop-shadow-[0_0_10px_rgba(255,214,10,0.4)]"
-              priority
-            />
-            <h1 className="text-lg font-extrabold text-yellow-400 tracking-wide mb-8 text-center">
-              GoFight Admin
-            </h1>
-          </>
-        )}
-
-        {/* Logo seul en mode collapsed (desktop) */}
-        {collapsed && !isMobile && (
+      {/* Sidebar */}
+      <aside
+        className={`sidebar fixed top-0 left-0 h-full bg-[#0B0B0B] text-white flex flex-col justify-between
+          shadow-[0_0_25px_rgba(255,214,10,0.3)] border-r border-yellow-500/20 transition-all duration-300 ease-in-out z-40
+          w-64 md:w-20 lg:w-64
+          ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        {/* === Header === */}
+        <div className="pt-16 md:pt-4 p-4 flex flex-col items-center">
           <Image
             src="/GoFight.png"
             alt="GoFight Logo"
-            width={40}
-            height={40}
-            className="mb-3 drop-shadow-[0_0_10px_rgba(255,214,10,0.4)]"
+            width={70}
+            height={70}
+            className="mb-3 drop-shadow-[0_0_10px_rgba(255,214,10,0.4)] md:w-12 md:h-12 lg:w-[70px] lg:h-[70px]"
             priority
           />
-        )}
-      </div>
+          <h1 className="text-lg font-extrabold text-yellow-400 tracking-wide mb-6 text-center md:hidden lg:block">
+            GoFight Admin
+          </h1>
+        </div>
 
-      {/* === Menu === */}
-      <nav className="flex-1 flex flex-col gap-2 text-base font-medium px-3 overflow-y-auto">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.route
-          return (
-            <button
-              key={item.label}
-              onClick={() => handleNavigation(item.route)}
-              className={`
-                flex items-center gap-3 px-3 py-3 rounded-lg 
-                transition-all duration-200
-                ${collapsed && !isMobile ? 'justify-center' : ''}
-                ${isActive 
-                  ? 'bg-yellow-500 text-black font-semibold shadow-lg' 
-                  : 'text-gray-300 hover:bg-yellow-500/10 hover:text-yellow-400'
-                }
-              `}
-            >
-              <item.icon size={20} className="flex-shrink-0" />
-              {(!collapsed || isMobile) && <span className="truncate">{item.label}</span>}
-            </button>
-          )
-        })}
-      </nav>
+        {/* === Menu === */}
+        <nav className="flex-1 flex flex-col gap-2 text-base font-medium px-3 overflow-y-auto">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.route
+            return (
+              <button
+                key={item.label}
+                onClick={() => handleNavigation(item.route)}
+                className={`
+                  flex items-center gap-3 px-3 py-3 rounded-lg 
+                  transition-all duration-200
+                  md:justify-center lg:justify-start
+                  ${isActive 
+                    ? 'bg-yellow-500 text-black font-semibold shadow-lg' 
+                    : 'text-gray-300 hover:bg-yellow-500/10 hover:text-yellow-400'
+                  }
+                `}
+                title={item.label}
+              >
+                <item.icon size={20} className="flex-shrink-0" />
+                <span className="truncate md:hidden lg:block">{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
 
-      {/* === Footer / Logout === */}
-      <div className={`
-        p-4 border-t border-yellow-500/10 
-        ${collapsed && !isMobile ? 'flex justify-center' : ''}
-      `}>
-        <button
-          onClick={handleLogout}
-          className={`
-            flex items-center gap-3 text-yellow-400 hover:text-yellow-200 
-            transition-colors duration-200 w-full
-            ${collapsed && !isMobile ? 'justify-center' : ''}
-          `}
-        >
-          <LogOut size={18} className="flex-shrink-0" />
-          {(!collapsed || isMobile) && <span>Déconnexion</span>}
-        </button>
-      </div>
-    </aside>
+        {/* === Footer / Logout === */}
+        <div className="p-4 border-t border-yellow-500/10">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full text-yellow-400 hover:text-yellow-200 
+              transition-colors duration-200 md:justify-center lg:justify-start"
+            title="Déconnexion"
+          >
+            <LogOut size={18} className="flex-shrink-0" />
+            <span className="md:hidden lg:block">Déconnexion</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Overlay pour mobile */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+    </>
   )
 }
