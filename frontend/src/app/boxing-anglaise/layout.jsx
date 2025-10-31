@@ -17,7 +17,8 @@ export default function DashboardLayout({ children }) {
           collapsed ? 'ml-20' : 'ml-64'
         }`}
       >
-        <Navbar />
+        <Navbar collapsed={collapsed} />
+
         <main className="flex-1 p-6">{children}</main>
       </div>
     </div>

@@ -24,7 +24,8 @@ export default function DashboardLayout({ children }) {
         className="flex flex-col flex-1 transition-all duration-300"
         style={{ marginLeft: `${sidebarWidth}px` }}
       >
-        <Navbar />
+        <Navbar collapsed={collapsed} />
+
         <main className="flex-1 p-4 sm:p-6 md:p-8 bg-[#0B0B0B] overflow-y-auto">
           {children}
         </main>

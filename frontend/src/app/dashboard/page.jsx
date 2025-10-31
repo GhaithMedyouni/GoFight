@@ -46,7 +46,9 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] text-white pt-20 px-4 pb-6 md:pt-24 md:pl-24 md:pr-6 lg:pl-72 lg:pr-8">
+    <div className="min-h-screen bg-[#0B0B0B] text-white pt-20 px-6 pb-6 md:pt-24">
+
+
       {/* ---- HEADER ---- */}
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-yellow-400 mb-6 md:mb-8 drop-shadow-[0_0_10px_rgba(255,214,10,0.6)]">
         📊 Tableau de bord

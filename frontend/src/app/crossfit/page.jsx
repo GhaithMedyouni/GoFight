@@ -36,7 +36,7 @@ export default function CrossfitPage() {
 
 
   return (
-    <div className="p-6 space-y-6 text-white bg-[#0B0B0B] min-h-screen">
+    <div className="p-6 space-y-6 text-white bg-[#0B0B0B] min-h-screen mt-20">
       {/* ---- HEADER ---- */}
       <div className="flex items-center justify-between">
         <h1 className="text-4xl font-bold text-yellow-400 flex items-center gap-3">
