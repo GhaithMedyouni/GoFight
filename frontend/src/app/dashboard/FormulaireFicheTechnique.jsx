@@ -305,6 +305,21 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
               <label className="block text-sm mb-1">Catégorie d'âge</label>
               <input type="text" value={getCategorieAge(age)} disabled className="w-full bg-gray-800 p-2 rounded" />
             </div>
+            {/* 🆕 Champ Sexe */}
+            <div>
+              <label className="block text-sm mb-1">Sexe</label>
+              <select
+                value={form.infoGenerale.sexe || ""}
+                onChange={(e) =>
+                  handleChange("infoGenerale", "sexe", e.target.value)
+                }
+                className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
+              >
+                <option value="">Sélectionner</option>
+                <option value="Homme">Homme</option>
+                <option value="Femme">Femme</option>
+              </select>
+            </div>
             <div>
               <label className="block text-sm mb-1">Poids (kg)</label>
               <input
@@ -531,21 +546,58 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
 
           {isCrossfit && (
             <div className="grid grid-cols-3 gap-4">
-              {['maxPullUps', 'maxPushUp', 'maxAbdo', 'maxBurpees', 'maxGainage',
-                'maxSquadMn', 'maxPress', 'maxDeadlift', 'maxSquadKg'
-              ].map(field => (
-                <div key={field}>
-                  <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                  <input
-                    type="number"
-                    value={form.profileTechnique[field] || ''}
-                    onChange={(e) => handleChange('profileTechnique', field, e.target.value)}
-                    className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-                  />
-                </div>
-              ))}
+              {[
+                'maxPullUps',
+                'maxPushUp',
+                'maxAbdo',
+                'maxBurpees',
+                'maxGainage',
+                'maxSquadMn',
+                'maxPress',
+                'maxDeadlift',
+                'maxSquadKg'
+              ].map(field => {
+                const value = form.profileTechnique[field] || 0;
+
+                // 💪 Seuils personnalisés par exercice
+                const thresholds = {
+                  maxPullUps: 10,
+                  maxPushUp: 25,
+                  maxAbdo: 30,
+                  maxBurpees: 10,
+                  maxGainage: 60,
+                  maxSquadMn: 40,
+                  maxPress: 0,      // pas de seuil, vert par défaut
+                  maxDeadlift: 0,   // pas de seuil, vert par défaut
+                  maxSquadKg: 0     // pas de seuil, vert par défaut
+                };
+
+                const limit = thresholds[field] || 0;
+                let colorClass = 'bg-green-700 text-white'; // ✅ Vert si bon
+
+                if (limit > 0) {
+                  if (value < limit) colorClass = 'bg-red-700 text-white'; // 🔴 En dessous du seuil
+                  else if (value === limit) colorClass = 'bg-orange-500 text-black'; // 🟠 Exactement au seuil
+                }
+
+                return (
+                  <div key={field}>
+                    <label className="block text-sm mb-1 capitalize">
+                      {field.replace(/([A-Z])/g, ' $1')}
+                    </label>
+                    <input
+                      type="number"
+                      value={value || ''}
+                      onChange={(e) => handleChange('profileTechnique', field, e.target.value)}
+                      className={`w-full p-2 rounded focus:ring-2 focus:ring-yellow-400 font-semibold transition-all duration-200 ${colorClass}`}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
+
+
         </div>
 
         {/* SECTION 5: Données Biométriques */}
@@ -905,7 +957,7 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
         </div>
 
         <div className="flex gap-4">
-         
+
 
           {/* Bouton: Enregistrer et fermer */}
           <button

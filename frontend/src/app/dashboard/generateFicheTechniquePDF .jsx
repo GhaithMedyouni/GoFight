@@ -61,6 +61,7 @@ export const generateFicheTechniquePDF = (athlete) => {
     ['Nom', athlete.nom],
     ['Prénom', athlete.prenom],
     ['Âge', `${age} ans`],
+    ['Sexe', infoGen.sexe || '-'],
     ['Catégorie d\'âge', getCategorieAge(age)],
     ['Poids', infoGen.poids ? `${infoGen.poids} kg` : '-'],
     ['Taille', infoGen.taille ? `${infoGen.taille} m` : '-'],
@@ -248,18 +249,118 @@ export const generateFicheTechniquePDF = (athlete) => {
   }
 
   if (isCrossfit) {
-    techniqueData = [
-      ['Max Pull-ups', profileTechnique.maxPullUps ? `${profileTechnique.maxPullUps} par min` : '-'],
-      ['Max Push-ups', profileTechnique.maxPushUp ? `${profileTechnique.maxPushUp} par min` : '-'],
-      ['Max Abdos', profileTechnique.maxAbdo ? `${profileTechnique.maxAbdo} par min` : '-'],
-      ['Max Burpees', profileTechnique.maxBurpees ? `${profileTechnique.maxBurpees} par min` : '-'],
-      ['Max Gainage', profileTechnique.maxGainage ? `${profileTechnique.maxGainage} min` : '-'],
-      ['Max Squat (min)', profileTechnique.maxSquadMn ? `${profileTechnique.maxSquadMn} par min` : '-'],
-      ['Max Press', profileTechnique.maxPress ? `${profileTechnique.maxPress} Kg` : '-'],
-      ['Max Deadlift', profileTechnique.maxDeadlift ? `${profileTechnique.maxDeadlift} Kg` : '-'],
-      ['Max Squat (kg)', profileTechnique.maxSquadKg ? `${profileTechnique.maxSquadKg} Kg` : '-']
-    ];
-  }
+  const profile = profileTechnique || {};
+
+  const seuils = {
+    maxPullUps: 10,
+    maxPushUp: 25,
+    maxAbdo: 30,
+    maxBurpees: 10,
+    maxGainage: 60,
+    maxSquadMn: 40
+  };
+
+  const exercices = [
+    ['Max Pull-ups (min)', 'maxPullUps', 'par min'],
+    ['Max Push-ups (min)', 'maxPushUp', 'par min'],
+    ['Max Abdos (min)', 'maxAbdo', 'par min'],
+    ['Max Burpees (min)', 'maxBurpees', 'par min'],
+    ['Max Gainage', 'maxGainage', 'sec'],
+    ['Max Squat (min)', 'maxSquadMn', 'par min'],
+    ['Max Press (kg)', 'maxPress', 'Kg'],
+    ['Max Deadlift (kg)', 'maxDeadlift', 'Kg'],
+    ['Max Squat (kg)', 'maxSquadKg', 'Kg']
+  ];
+
+  // === Réglages précis ===
+  let startY = yPos + 5;
+  const lineH = 6.5;          // 🔹 plus compact
+  const colLabelX = 12;       // aligné à gauche
+  const colValueX = 90;       // un peu rapproché
+  const barX = 130;           // début des barres
+  const barW = 45;            // largeur légèrement réduite
+  const percentOffset = 4;
+  const tableRight = 185;
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);         // 🔹 police réduite
+
+  exercices.forEach(([label, key, unite], index) => {
+    const valeur = parseFloat(profile[key]) || 0;
+    const texte = valeur > 0 ? `${valeur} ${unite}` : '-';
+    const seuil = seuils[key];
+
+    let color = [0, 0, 0];
+    let percent = 1;
+    if (seuil) {
+      percent = Math.min(valeur / seuil, 1);
+      if (valeur < seuil) color = [200, 0, 0];
+      else if (valeur === seuil) color = [255, 140, 0];
+      else color = [0, 150, 0];
+    }
+
+    // === Fond alterné ===
+    if (index % 2 === 1) {
+      pdf.setFillColor(245, 245, 245);
+      pdf.rect(colLabelX, startY - 5.2, tableRight - colLabelX, lineH + 0.8, 'F');
+    }
+
+    // === Correction première ligne ===
+    const yCorrection = index === 0 ? -0.8 : 0;
+
+    // === Nom de l’exercice ===
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(label, colLabelX + 3, startY + yCorrection);
+
+    // === Valeur ===
+    pdf.setTextColor(...color);
+    pdf.text(texte, colValueX, startY + yCorrection);
+
+    // === Barres pour les 6 premiers ===
+    if (index < 6) {
+      const barY = startY - 3 + yCorrection;
+      const barH = 3;
+
+      pdf.setDrawColor(180);
+      pdf.rect(barX, barY, barW, barH);
+      const filledWidth = seuil ? barW * percent : barW;
+      pdf.setFillColor(...color);
+      pdf.rect(barX, barY, filledWidth, barH, 'F');
+
+      const displayPercent = seuil ? Math.round((valeur / seuil) * 100) : 100;
+      pdf.setFontSize(7);
+      pdf.setTextColor(80);
+      pdf.text(`${displayPercent}%`, barX + barW + percentOffset, barY + 2.5);
+      pdf.setFontSize(9); // rétablit taille
+    }
+
+    // === Ligne séparatrice ===
+    pdf.setDrawColor(230);
+    pdf.setLineWidth(0.2);
+    pdf.line(colLabelX, startY + 2, tableRight, startY + 2);
+
+    startY += lineH;
+
+    // 🧾 auto saut page si besoin
+    if (startY > 275) {
+      pdf.addPage();
+      startY = 20;
+    }
+  });
+
+  yPos = startY + 8;
+}
+
+
+
+
+
+
+
+
+
+
+
 
   pdf.autoTable({
     startY: yPos,

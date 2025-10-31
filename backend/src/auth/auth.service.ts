@@ -16,7 +16,7 @@ export class AuthService {
   async seedAdmin() {
     const exists = await this.adminModel.findOne({ username: 'Boyka' });
     if (!exists) {
-      const hash = await bcrypt.hash('Shankes', 10);
+      const hash = await bcrypt.hash('GoFight', 10);
       await this.adminModel.create({ username: 'Boyka', password: hash });
       console.log('✅ Admin créé avec succès');
     }
