@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import type { ReactNode } from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,7 +17,12 @@ export const metadata = {
   description: "Espace d'administration GoFight",
 };
 
-export default function RootLayout({ children }) {
+// ✅ Définition explicite du type pour children
+type RootLayoutProps = {
+  children: ReactNode;
+};
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="fr">
       <head>
@@ -29,7 +35,7 @@ export default function RootLayout({ children }) {
       >
         {children}
 
-        {/* Golden blurred background effect */}
+        {/* Effet de fond doré flou */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-yellow-500 opacity-10 blur-[180px]" />
           <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-yellow-400 opacity-10 blur-[220px]" />
