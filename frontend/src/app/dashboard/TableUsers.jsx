@@ -52,12 +52,17 @@ export default function TableUsers({ data, onDeleted, onEdit, onEditFiche }) {
                 className="border-b border-yellow-500/10 hover:bg-yellow-500/5 transition"
               >
                 <td className="p-3">
-                  <img
-                    src={u.photo || '/default-user.png'}
-                    alt="athlete"
-                    className="w-10 h-10 rounded-full object-cover border border-yellow-500/30"
-                  />
+                  <div className="relative group w-10 h-10">
+                    <img
+                      src={u.photo || '/default-user.png'}
+                      alt="athlete"
+                      className="w-10 h-10 rounded-full object-cover border border-yellow-500/30 
+                 transition-transform duration-300 group-hover:scale-150 
+                 group-hover:z-10 group-hover:shadow-[0_0_10px_rgba(255,214,10,0.8)]"
+                    />
+                  </div>
                 </td>
+
                 <td className="p-3">{u.nom}</td>
                 <td className="p-3">{u.prenom}</td>
                 <td className="p-3">{u.dateNaissance || '-'}</td>
@@ -181,9 +186,8 @@ export default function TableUsers({ data, onDeleted, onEdit, onEditFiche }) {
           <button
             onClick={prevPage}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-lg border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 transition ${
-              currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`px-4 py-2 rounded-lg border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 transition ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             ⬅️ Précédent
           </button>
@@ -196,9 +200,8 @@ export default function TableUsers({ data, onDeleted, onEdit, onEditFiche }) {
           <button
             onClick={nextPage}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-lg border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 transition ${
-              currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`px-4 py-2 rounded-lg border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 transition ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             Suivant ➡️
           </button>

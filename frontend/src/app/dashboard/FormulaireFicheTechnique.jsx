@@ -499,24 +499,59 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
 
         {/* SECTION 3: Profile Physique */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold text-yellow-400 mb-4">3. Profile Physique (1-10)</h3>
+          <h3 className="text-xl font-semibold text-yellow-400 mb-4">
+            3. Profile Physique (1-10)
+          </h3>
+
           <div className="grid grid-cols-3 gap-4">
-            {['evaluation', 'qualité', 'forceExplosive', 'vitesse', 'endurance', 'puissanceFrappe', 'coordination', 'souplesse'].map(field => (
-              <div key={field}>
-                <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="0.01"
-                  value={form.profilePhysique[field] || ''}
-                  onChange={(e) => handleChange('profilePhysique', field, e.target.value)}
-                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-                />
-              </div>
-            ))}
+            {[
+              'evaluation',
+              'qualité',
+              'forceExplosive',
+              'vitesse',
+              'endurance',
+              'puissanceFrappe',
+              'coordination',
+              'souplesse'
+            ].map(field => {
+              const rawValue = form.profilePhysique[field];
+              const value = parseFloat(rawValue);
+
+              // 🎨 Couleur dynamique selon la note
+              let colorClass = "bg-gray-800 text-white"; // par défaut (vide ou invalide)
+              if (rawValue === "" || isNaN(value)) {
+                colorClass = "bg-gray-800 text-white"; // 🔹 vide → gris
+              } else if (value >= 0 && value < 5) {
+                colorClass = "bg-red-700 text-white"; // 🔴 faible
+              } else if (value >= 5 && value < 8) {
+                colorClass = "bg-orange-400 text-white"; // 🟠 moyen
+              } else if (value >= 8 && value <= 10) {
+                colorClass = "bg-green-700 text-white"; // 🟢 bon
+              }
+
+              return (
+                <div key={field}>
+                  <label className="block text-sm mb-1 capitalize">
+                    {field.replace(/([A-Z])/g, ' $1')}
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="0.01"
+                    value={rawValue || ""}
+                    onChange={(e) => handleChange('profilePhysique', field, e.target.value)}
+                    className={`w-full p-2 rounded focus:ring-2 focus:ring-yellow-400 transition-all duration-200 ${colorClass}`}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
+
+
+
 
         {/* SECTION 4: Profile Technique */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
@@ -524,25 +559,51 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
 
           {isBoxing && (
             <div className="grid grid-cols-3 gap-4">
-              {['evaluation', 'competence', 'positionGarde', 'deplacement', 'jabCross', 'crochet', 'uppercut',
-                'esquiveBlocage', 'enchainement', 'timingDistance', 'riposte',
+              {[
+                'evaluation',
+                'competence',
+                'positionGarde',
+                'deplacement',
+                'jabCross',
+                'crochet',
+                'uppercut',
+                'esquiveBlocage',
+                'enchainement',
+                'timingDistance',
+                'riposte',
                 ...(athlete.specialite === 'KickBoxing' ? ['coupDePied'] : [])
-              ].map(field => (
-                <div key={field}>
-                  <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    step="0.01"
-                    value={form.profileTechnique[field] || ''}
-                    onChange={(e) => handleChange('profileTechnique', field, e.target.value)}
-                    className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-                  />
-                </div>
-              ))}
+              ].map(field => {
+                const rawValue = form.profileTechnique[field];
+                const value = parseFloat(rawValue);
+
+                // 🎨 Couleur dynamique selon la note (1 à 10)
+                let colorClass = "bg-gray-800 text-white"; // 🩶 vide ou non numérique
+                if (rawValue !== "" && !isNaN(value)) {
+                  if (value >= 0 && value < 5) colorClass = "bg-red-700 text-white";         // 🔴 faible
+                  else if (value >= 5 && value < 8) colorClass = "bg-orange-400 text-white"; // 🟠 moyen
+                  else if (value >= 8 && value <= 10) colorClass = "bg-green-700 text-white"; // 🟢 bon
+                }
+
+                return (
+                  <div key={field}>
+                    <label className="block text-sm mb-1 capitalize">
+                      {field.replace(/([A-Z])/g, ' $1')}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.01"
+                      value={rawValue || ""}
+                      onChange={(e) => handleChange('profileTechnique', field, e.target.value)}
+                      className={`w-full p-2 rounded focus:ring-2 focus:ring-yellow-400 font-semibold transition-all duration-200 ${colorClass}`}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
+
 
           {isCrossfit && (
             <div className="grid grid-cols-3 gap-4">
@@ -557,7 +618,8 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                 'maxDeadlift',
                 'maxSquadKg'
               ].map(field => {
-                const value = form.profileTechnique[field] || 0;
+                const rawValue = form.profileTechnique[field];
+                const value = parseFloat(rawValue);
 
                 // 💪 Seuils personnalisés par exercice
                 const thresholds = {
@@ -567,17 +629,22 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                   maxBurpees: 10,
                   maxGainage: 60,
                   maxSquadMn: 40,
-                  maxPress: 0,      // pas de seuil, vert par défaut
-                  maxDeadlift: 0,   // pas de seuil, vert par défaut
-                  maxSquadKg: 0     // pas de seuil, vert par défaut
+                  maxPress: 0,      // pas de seuil → neutre
+                  maxDeadlift: 0,   // pas de seuil → neutre
+                  maxSquadKg: 0     // pas de seuil → neutre
                 };
 
-                const limit = thresholds[field] || 0;
-                let colorClass = 'bg-green-700 text-white'; // ✅ Vert si bon
+                const limit = thresholds[field];
+                let colorClass = "bg-gray-800 text-white"; // 🩶 Par défaut (vide ou sans valeur)
 
-                if (limit > 0) {
-                  if (value < limit) colorClass = 'bg-red-700 text-white'; // 🔴 En dessous du seuil
-                  else if (value === limit) colorClass = 'bg-orange-500 text-black'; // 🟠 Exactement au seuil
+                if (rawValue !== "" && !isNaN(value)) {
+                  if (limit > 0) {
+                    if (value < limit) colorClass = "bg-red-700 text-white";       // 🔴 En dessous du seuil
+                    else if (value === limit) colorClass = "bg-orange-400 text-white"; // 🟠 Exact au seuil
+                    else colorClass = "bg-green-700 text-white";                   // 🟢 Au-dessus du seuil
+                  } else {
+                    colorClass = "bg-green-700 text-white"; // ✅ sans seuil → vert
+                  }
                 }
 
                 return (
@@ -587,7 +654,7 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
                     </label>
                     <input
                       type="number"
-                      value={value || ''}
+                      value={rawValue || ''}
                       onChange={(e) => handleChange('profileTechnique', field, e.target.value)}
                       className={`w-full p-2 rounded focus:ring-2 focus:ring-yellow-400 font-semibold transition-all duration-200 ${colorClass}`}
                     />
@@ -596,6 +663,7 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
               })}
             </div>
           )}
+
 
 
         </div>
@@ -646,24 +714,51 @@ export default function FormulaireFicheTechnique({ athlete, onSaved }) {
 
         {/* SECTION 6: Profile Mental */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold text-yellow-400 mb-4">6. Profile Mental (1-10)</h3>
+          <h3 className="text-xl font-semibold text-yellow-400 mb-4">
+            6. Profile Mental (1-10)
+          </h3>
+
           <div className="grid grid-cols-3 gap-4">
-            {['evaluation', 'aspect', 'motivation', 'discipline', 'concentration', 'espritEquipe', 'gestionFatigueStress'].map(field => (
-              <div key={field}>
-                <label className="block text-sm mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="0.01"
-                  value={form.profileMental[field] || ''}
-                  onChange={(e) => handleChange('profileMental', field, e.target.value)}
-                  className="w-full bg-gray-800 p-2 rounded focus:ring-2 focus:ring-yellow-400"
-                />
-              </div>
-            ))}
+            {[
+              'evaluation',
+              'aspect',
+              'motivation',
+              'discipline',
+              'concentration',
+              'espritEquipe',
+              'gestionFatigueStress'
+            ].map(field => {
+              const rawValue = form.profileMental[field];
+              const value = parseFloat(rawValue);
+
+              // 🎨 Couleur dynamique selon la note
+              let colorClass = "bg-gray-800 text-white"; // 🩶 vide ou non numérique
+              if (rawValue !== "" && !isNaN(value)) {
+                if (value >= 0 && value < 5) colorClass = "bg-red-700 text-white";         // 🔴 faible
+                else if (value >= 5 && value < 8) colorClass = "bg-orange-400 text-white"; // 🟠 moyen
+                else if (value >= 8 && value <= 10) colorClass = "bg-green-700 text-white"; // 🟢 bon
+              }
+
+              return (
+                <div key={field}>
+                  <label className="block text-sm mb-1 capitalize">
+                    {field.replace(/([A-Z])/g, ' $1')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="0.01"
+                    value={rawValue || ""}
+                    onChange={(e) => handleChange('profileMental', field, e.target.value)}
+                    className={`w-full p-2 rounded focus:ring-2 focus:ring-yellow-400 font-semibold transition-all duration-200 ${colorClass}`}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
+
 
         {/* SECTION 7: Objectifs */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 p-6 rounded-lg">
