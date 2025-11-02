@@ -55,7 +55,7 @@ export const generateFicheTechniquePDF = (athlete) => {
   pdf.setTextColor(0, 0, 0);
 
   const infoGen = athlete.infoGenerale || {};
-  const isKidsCategory = ['Pre-poussin', 'Poussin', 'École', 'Minimes', 'Cadet'].includes(categorieAge);
+  const isKidsCategory = ['Pre-poussin', 'Poussin', 'École', 'Minimes'].includes(categorieAge);
   const specialiteAffichee = isKidsCategory ? `${athlete.specialite} (Kids)` : athlete.specialite;
   const infoData = [
     ['Nom', athlete.nom],
